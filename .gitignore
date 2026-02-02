@@ -1,0 +1,13 @@
+.env
+node_modules/
+db.json
+.DS_Store
+npm-debug.log
+.env.local
+db.local.json
+.vscode/
+.idea/
+dist/
+build/
+.wwebjs_auth/
+.wwebjs_cache/

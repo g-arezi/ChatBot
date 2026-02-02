@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  bot:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - EVOLUTION_API_BASE_URL=${EVOLUTION_API_BASE_URL}
+      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - FROM_EMAIL=${FROM_EMAIL}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+    restart: unless-stopped

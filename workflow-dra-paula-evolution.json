@@ -1,0 +1,948 @@
+{
+  "name": "Dra Paula - Evolution API Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webhook-dra-paula",
+        "responseMode": "onReceived",
+        "responseData": "={{{ $json }}}"
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Normaliza o webhook recebido da Evolution API\nconst body = items[0].json;\n// Extrair campos possíveis do provider (ajustar conforme webhook real)\nconst from = body.from || body?.contact || body?.sender || (body?.message && body.message.from) || (body?.participant) || null;\nconst interactive = body?.interactive || (body?.message && body.message.interactive) || null;\nconst listReplyId = interactive && (interactive.list_reply ? (interactive.list_reply.id || interactive.list_reply.title) : (body?.message?.listResponseMessage && body.message.listResponseMessage.singleSelectReply && body.message.listResponseMessage.singleSelectReply.selectedRowId)) || (body?.listReplyId) || null;\nconst buttonReplyId = interactive && (interactive.button_reply ? (interactive.button_reply.id || interactive.button_reply.title) : (body?.message?.buttonsResponseMessage && body.message.buttonsResponseMessage.selectedButtonId)) || (body?.buttonReplyId) || null;\nconst messageText = (body.text && (body.text.body || body.text)) || (body.message && (body.message.text || body.message.body || (body.message.extendedTextMessage && body.message.extendedTextMessage.text))) || (body.body && body.body.text) || '';\n// Remove diacríticos e normaliza\nconst normalizedText = (messageText || '').toString().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim();\n\nreturn [{ json: { raw: body, from, messageText, normalizedText, listReplyId, buttonReplyId, interactive } }];"
+      },
+      "name": "Normalize",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "contact_number",
+              "value": "={{ $json.from }}"
+            },
+            {
+              "name": "message_text",
+              "value": "={{ $json.messageText }}"
+            },
+            {
+              "name": "normalized_text",
+              "value": "={{ $json.normalizedText }}"
+            },
+            {
+              "name": "button_id",
+              "value": "={{ $json.buttonReplyId || '' }}"
+            },
+            {
+              "name": "list_response_id",
+              "value": "={{ $json.listReplyId || '' }}"
+            }
+          ]
+        },
+        "options": {
+          "keepOnlySet": false
+        }
+      },
+      "name": "Prepare",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "rules": [
+          {
+            "value1": "={{$json[\"normalized_text\"]}}",
+            "operation": "contains",
+            "value2": "suicidio, suicida, me matar, matar, morrer, morte, acabar com tudo, nao aguento mais, desespero, crise, emergencia, urgente, socorro, vou pular, vou me jogar"
+          }
+        ],
+        "mode": "any"
+      },
+      "name": "Check Emergency Words",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [900, 260]
+    },
+    {
+      "parameters": {
+        "rules": [
+          {
+            "value1": "={{$json[\"list_response_id\"]}}",
+            "operation": "equals",
+            "value2": "op_1_valores"
+          }
+        ]
+      },
+      "name": "Identify: Valores",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [900, 80]
+    },
+    {
+      "parameters": {
+        "rules": [
+          {
+            "value1": "={{$json[\"list_response_id\"]}}",
+            "operation": "equals",
+            "value2": "op_2_consulta"
+          }
+        ]
+      },
+      "name": "Identify: Consulta",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1100, 80]
+    },
+    {
+      "parameters": {
+        "rules": [
+          {
+            "value1": "={{$json[\"list_response_id\"]}}",
+            "operation": "equals",
+            "value2": "op_3_hipnoterapia"
+          }
+        ]
+      },
+      "name": "Identify: Hipnoterapia",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1300, 80]
+    },
+    {
+      "parameters": {
+        "rules": [
+          {
+            "value1": "={{$json[\"list_response_id\"]}}",
+            "operation": "equals",
+            "value2": "op_4_projeto"
+          }
+        ]
+      },
+      "name": "Identify: Projeto",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1500, 80]
+    },
+    {
+      "parameters": {
+        "rules": [
+          {
+            "value1": "={{$json[\"list_response_id\"]}}",
+            "operation": "equals",
+            "value2": "op_5_politica"
+          }
+        ]
+      },
+      "name": "Identify: Politica",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1700, 80]
+    },
+    {
+      "parameters": {
+        "rules": [
+          {
+            "value1": "={{$json[\"list_response_id\"]}}",
+            "operation": "equals",
+            "value2": "op_6_urgencia"
+          }
+        ]
+      },
+      "name": "Identify: Emergencia",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1900, 80]
+    },
+    {
+      "parameters": {
+        "rules": [
+          {
+            "value1": "={{$json[\"list_response_id\"]}}",
+            "operation": "equals",
+            "value2": "op_7_secretaria"
+          },
+          {
+            "value1": "={{$json[\"button_id\"]}}",
+            "operation": "equals",
+            "value2": "ACTION_FALAR_SECRETARIA"
+          }
+        ],
+        "mode": "any"
+      },
+      "name": "Identify: Secretaria",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [2100, 80]
+    },
+    {
+      "parameters": {
+        "rules": [
+          {
+            "value1": "={{$json[\"button_id\"]}}",
+            "operation": "equals",
+            "value2": "ACTION_DEIXAR_MSG"
+          }
+        ]
+      },
+      "name": "Identify: Leave Message",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [2100, 200]
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "requestMethod": "POST",
+        "url": "={{$credentials.evolutionApi.baseUrl + '/messages'}}",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {},
+        "headerParametersJson": "={\"Authorization\":\"Bearer {{$credentials.evolutionApi.apiKey}}\",\"Content-Type\":\"application/json\"}"
+      },
+      "name": "Send Message (Evolution)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [2300, 240]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "payload", "value": "={\n  \"to\": $json.contact_number,\n  \"type\": \"interactive\",\n  \"interactive\": {\n    \"type\": \"list\",\n    \"header\": { \"type\": \"text\", \"text\": \"Olá! Seja muito bem-vindo(a)! 💙\" },\n    \"body\": { \"text\": `Olá! Seja muito bem-vindo(a)! 💙\n\nEu sou a Dra. Paula Teixeira Pacheco (CRM-SP 205251).\n\nAcredito que tratar a mente é cuidar da alma inteira. Sim, a medicação pode ser necessária - ela acalma tempestades, equilibra neuroquímicos, traz alívio. Mas meu olhar vai além: vejo você como um ser completo, com história, emoções, sonhos e dores que pedem para serem compreendidas, não apenas silenciadas.\n\nIntegro neurociência, psicanálise, filosofia, budismo e estoicismo porque sei que a cura verdadeira acontece quando ciência e alma se encontram. Cada sintoma é um mensageiro - e juntos vamos decifrar o que ele tem a dizer.\n\n✨ Aqui, você não é um diagnóstico. É um universo a ser compreendido.\n\nComo posso ajudar você hoje? Escolha uma das opções abaixo:` },\n    \"footer\": { \"text\": \"CRM-SP 205251\" },\n    \"action\": {\n      \"button\": \"Ver opções\",\n      \"sections\": [\n        {\n          \"title\": \"Menu\",\n          \"rows\": [\n            { \"id\": \"op_1_valores\", \"title\": \"1️⃣ Valores e Formas de Pagamento\" },\n            { \"id\": \"op_2_consulta\", \"title\": \"2️⃣ Como funciona a Consulta\" },\n            { \"id\": \"op_3_hipnoterapia\", \"title\": \"3️⃣ Hipnoterapia Clínica\" },\n            { \"id\": \"op_4_projeto\", \"title\": \"4️⃣ Projeto Mentes Fortes (Palestras)\" },\n            { \"id\": \"op_5_politica\", \"title\": \"5️⃣ Política de Agendamento e Cancelamento\" },\n            { \"id\": \"op_6_urgencia\", \"title\": \"🆘 PRECISO DE AJUDA URGENTE\" },\n            { \"id\": \"op_7_secretaria\", \"title\": \"💬 Falar com a Secretária (Seg-Sex, 9h-18h)\" }\n          ]\n        }\n      ]\n    }\n  }\n}" }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Build Menu Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [2300, 120]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "payload", "value": "={ \"to\": $json.contact_number, \"type\": \"text\", \"text\": { \"body\": \"💰 VALORES DAS CONSULTAS:\\n\\n🧑‍⚕️ Psiquiatria Adulto: R$ 500,00 \\n👶 Psiquiatria Infantil: R$ 600,00\\n\\n💳 FORMAS DE PAGAMENTO:\\n• PIX (à vista)\\n• Cartão de crédito (até 2x com juros do cartão)\\n\\n📌 COMO FUNCIONA O PAGAMENTO:\\n• 50% de sinal no agendamento\\n• 50% restantes até 24h antes da consulta\\n\\n🏥 ATENDIMENTO:\\n• 100% Online (Google Meet)\\n• Não atendemos por planos de saúde\\n• Fornecemos recibo para reembolso\\n\\n---\\n\\nO que deseja fazer agora?\" } }" }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Option: Valores",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [2500, 80]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "payload", "value": "={ \"to\": $json.contact_number, \"type\": \"text\", \"text\": { \"body\": \"🩺 COMO FUNCIONA A CONSULTA\\n\\n⏰ DURAÇÃO: Aproximadamente 50 minutos\\n💻 FORMATO: 100% Online via Google Meet\\n\\Vamos conversar sobre: \\n\\n📖 SUA HISTÓRIA:\\n• O que te trouxe até mim? Qual é sua dor?\\n• Sua trajetória de vida\\n• Momentos marcantes - traumas, perdas, transformações\\n\\💊 SEU HISTÓRICO DE TRATAMENTO:\\n• Já fez terapia ou tratamento psiquiátrico antes?\\n• Que medicações já usou? Como foi? Funcionou? Teve efeitos colaterais?\\n• O que já tentou e não deu certo?\\n\\🧭 NOSSO CAMINHO: \\nJuntos, vamos construir um caminho terapêutico que faça sentido para sua vida...\\n\\⚠️ IMPORTANTE SOBRE RETORNOS:\\n• Não trabalhamos com consultas de retorno\\n• Laudos, atestados e renovação de receitas requerem nova consulta\\n\\---\\n\\nO que deseja fazer agora?\" } }" }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Option: Como funciona",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [2500, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "payload", "value": "={ \"to\": $json.contact_number, \"type\": \"text\", \"text\": { \"body\": \"🌀 HIPNOTERAPIA CLÍNICA\\n\\nSabe aquela dor que você carrega há anos? ...\\n\\💰 COMO FUNCIONA: ...\\n\\O que deseja fazer agora?\" } }" }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Option: Hipnoterapia",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [2500, 320]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "payload", "value": "={ \"to\": $json.contact_number, \"type\": \"text\", \"text\": { \"body\": \"🧠 PROJETO MENTES FORTES\\n\\nVivemos uma epidemia silenciosa de adoecimento mental...\\n\\📧 Quer saber mais? mentesfortes.psiquiatria@gmail.com\\n\\O que deseja fazer agora?\" } }" }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Option: Projeto Mentes Fortes",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [2500, 440]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "payload", "value": "={ \"to\": $json.contact_number, \"type\": \"text\", \"text\": { \"body\": \"📅 POLÍTICA DE AGENDAMENTO E CANCELAMENTO\\n\\nConsultas são agendadas diretamente com nossa secretária...\\n\\O que deseja fazer agora?\" } }" }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Option: Politica Agendamento",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [2500, 560]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "payload", "value": "={ \"to\": $json.contact_number, \"type\": \"text\", \"text\": { \"body\": \"🆘 EMERGÊNCIA - AJUDA IMEDIATA\\n\\nSe você está em crise ou risco imediato, precisa de ajuda AGORA:\\n\\📞 CVV - Centro de Valorização da Vida\\nLigue: 188 (24 horas, gratuito)\\nChat: www.cvv.org.br\\n\\🚨 SAMU - Serviço de Atendimento Móvel de Urgência\\nLigue: 192\\n\\🏥 PRONTO-SOCORRO PSIQUIÁTRICO\\nProcure o hospital de emergência psiquiátrica mais próximo de você agora.\\n\\---\\n\" } }" }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Option: Emergencia",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [2500, 680]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Verifica horário comercial (America/Sao_Paulo)\nconst now = new Date();\n// Ajuste de fuso pode ser necessário; aqui usamos hora do servidor\nconst hours = now.getHours();\nconst day = now.getDay(); // 0=Sun 1=Mon ...\nconst isWeekday = day >= 1 && day <= 5;\nconst inHours = isWeekday && hours >= 9 && hours < 18;\nreturn [{ json: { inBusinessHours: inHours, hours, day } }];"
+      },
+      "name": "Check Business Hours",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2100, 320]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "payload", "value": "={ \"to\": $json.contact_number, \"type\": \"text\", \"text\": { \"body\": \"Obrigada pelo contato! 💙\\n\\nNo momento estamos fora do horário de atendimento.\\n\\📅 NOSSO HORÁRIO:\\nSegunda a Sexta, das 9h às 18h\\n\\O QUE VOCÊ PODE FAZER:\\n\\1️⃣ DEIXAR UMA MENSAGEM:\\nDeixe seu nome, telefone e motivo do contato.\\nRetornaremos no próximo dia útil!\\n\\2️⃣ VOLTAR AMANHÃ:\\nEstaremos disponíveis a partir das 9h!\\n\\Deseja deixar uma mensagem?\" } }" }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Option: Secretaria Fora Horario",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [2300, 440]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "payload", "value": "={ \"to\": $json.contact_number, \"type\": \"text\", \"text\": { \"body\": \"Ótimo! Vou te transferir para atendimento humano agora! 😊\\n\\Nossa secretária está disponível e vai te atender com todo carinho!\\n\\Aguarde um momento...\" } }" }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Option: Secretaria Dentro Horario",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [2300, 320]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "payload",
+              "value": "={ \"to\": $json.contact_number, \"type\": \"text\", \"text\": { \"body\": \"Perfeito! Por favor, envie sua mensagem com:\\n\\n📝 Seu nome completo:\\n📱 Seu telefone:\\n💬 Motivo do contato:\\n\\nPode escrever tudo em uma única mensagem ou separado. Retornaremos assim que possível! 💙\" } }"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Option: Solicitar Mensagem",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [2500, 920]
+    },
+    {
+      "parameters": {
+        "operation": "lookup",
+        "sheetId": "=YOUR_SPREADSHEET_ID",
+        "sheetName": "=Sheet1",
+        "lookupColumn": "=contact_number",
+        "lookupValue": "={{ $json.contact_number }}",
+        "options": {}
+      },
+      "name": "Google Sheets - Load State",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [900, 420]
+    },
+    {
+      "parameters": {
+        "rules": [
+          {
+            "value1": "={{$json[\"status\"]}}",
+            "operation": "equals",
+            "value2": "aguardando_mensagem_secretaria"
+          }
+        ]
+      },
+      "name": "If - Awaiting Message?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1100, 420]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "=YOUR_SPREADSHEET_ID",
+        "sheetName": "=Sheet1",
+        "columns": "=contact_number,status",
+        "values": "={{ [$json.contact_number, 'aguardando_mensagem_secretaria'] }}",
+        "options": {}
+      },
+      "name": "Google Sheets - Upsert Awaiting",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [2700, 920]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "sheetId": "=YOUR_SPREADSHEET_ID",
+        "sheetName": "=Sheet1",
+        "lookupColumn": "=contact_number",
+        "lookupValue": "={{ $json.contact_number }}",
+        "updateColumn": "=status",
+        "updateValue": "=idle",
+        "options": {}
+      },
+      "name": "Google Sheets - Reset State",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [2900, 560]
+    },
+    {
+      "parameters": {
+        "fromEmail": "mentesfortes.psiquiatria@gmail.com",
+        "toEmail": "={{ ['mentesfortes.psiquiatria@gmail.com'] }}",
+        "subject": "={{ '⚠️ ALERTA URGENTE: Mensagem de Crise - ' + $json.contact_number }}",
+        "text": "={{ 'Uma mensagem de possível crise foi detectada: ' + $json.message_text + '\n\nContato: ' + $json.contact_number }}"
+      },
+      "name": "Email: Emergency Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [2700, 820]
+    },
+    {
+      "parameters": {
+        "fromEmail": "mentesfortes.psiquiatria@gmail.com",
+        "toEmail": "={{ ['mentesfortes.psiquiatria@gmail.com'] }}",
+        "subject": "={{ '💬 Nova Mensagem Deixada (Fora do Horário) - ' + $json.contact_number }}",
+        "text": "={{ 'O usuário ' + $json.contact_number + ' deixou a seguinte mensagem para a secretária:\n\n' + $json.message_text + '\n\nPor favor, retorne o contato no próximo dia útil.' }}"
+      },
+      "name": "Email: Message Left",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [2700, 560]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize": {
+      "main": [
+        [
+          {
+            "node": "Prepare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare": {
+      "main": [
+        [
+          {
+            "node": "Check Emergency Words",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Identify: Valores",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Identify: Consulta",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Identify: Hipnoterapia",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Identify: Projeto",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Identify: Politica",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Identify: Emergencia",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Identify: Secretaria",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Identify: Leave Message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Sheets - Load State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Emergency Words": {
+      "main": [
+        [
+          {
+            "node": "Option: Emergencia",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email: Emergency Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Menu Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify: Valores": {
+      "main": [
+        [
+          {
+            "node": "Option: Valores",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Menu Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify: Consulta": {
+      "main": [
+        [
+          {
+            "node": "Option: Como funciona",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Menu Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify: Hipnoterapia": {
+      "main": [
+        [
+          {
+            "node": "Option: Hipnoterapia",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Menu Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify: Projeto": {
+      "main": [
+        [
+          {
+            "node": "Option: Projeto Mentes Fortes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Menu Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify: Politica": {
+      "main": [
+        [
+          {
+            "node": "Option: Politica Agendamento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Menu Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify: Emergencia": {
+      "main": [
+        [
+          {
+            "node": "Option: Emergencia",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email: Emergency Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Menu Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify: Secretaria": {
+      "main": [
+        [
+          {
+            "node": "Check Business Hours",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Menu Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify: Leave Message": {
+      "main": [
+        [
+          {
+            "node": "Option: Solicitar Mensagem",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Sheets - Upsert Awaiting",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Menu Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Load State": {
+      "main": [
+        [
+          {
+            "node": "If - Awaiting Message?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Emergency Words",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Identify: Valores",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Identify: Consulta",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Identify: Hipnoterapia",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Identify: Projeto",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Identify: Politica",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Identify: Emergencia",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Identify: Secretaria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Awaiting Message?": {
+      "main": [
+        [
+          {
+            "node": "Email: Message Left",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Message (Evolution)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Sheets - Reset State",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Menu Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Menu Payload": {
+      "main": [
+        [
+          {
+            "node": "Send Message (Evolution)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Option: Valores": {
+      "main": [
+        [
+          {
+            "node": "Send Message (Evolution)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Option: Como funciona": {
+      "main": [
+        [
+          {
+            "node": "Send Message (Evolution)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Option: Hipnoterapia": {
+      "main": [
+        [
+          {
+            "node": "Send Message (Evolution)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Option: Projeto Mentes Fortes": {
+      "main": [
+        [
+          {
+            "node": "Send Message (Evolution)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Option: Politica Agendamento": {
+      "main": [
+        [
+          {
+            "node": "Send Message (Evolution)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Option: Emergencia": {
+      "main": [
+        [
+          {
+            "node": "Send Message (Evolution)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Business Hours": {
+      "main": [
+        [
+          {
+            "node": "Option: Secretaria Dentro Horario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Option: Secretaria Fora Horario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Option: Secretaria Dentro Horario": {
+      "main": [
+        [
+          {
+            "node": "Send Message (Evolution)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email: Message Left",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Option: Secretaria Fora Horario": {
+      "main": [
+        [
+          {
+            "node": "Send Message (Evolution)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Option: Solicitar Mensagem": {
+      "main": [
+        [
+          {
+            "node": "Send Message (Evolution)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Upsert Awaiting": {
+      "main": [
+        [
+          {
+            "node": "noop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Reset State": {
+      "main": [
+        [
+          {
+            "node": "noop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {}
+}
