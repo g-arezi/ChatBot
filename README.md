@@ -1,4 +1,4 @@
-# Dra. Paula — Chatbot (Evolution API Bridge)
+#  Chatbot (Evolution API Bridge)
 
 > Bridge entre a Evolution API e WhatsApp (fallback), implementado em Node.js com Express.
 
